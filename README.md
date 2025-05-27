@@ -164,7 +164,7 @@ If you use Sublation in your research, please cite:
 ```bibtex
 @misc{sublation2025,
   title={Sublation: Dialectical AI through Compositional Memory-Compute Units},
-  author={[Your Name]},
+  author={sbl8},
   year={2025},
   url={https://github.com/sbl8/sublation}
 }
