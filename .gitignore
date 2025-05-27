@@ -1,0 +1,102 @@
+# Sublation Project .gitignore
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.log
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Go build artifacts
+/bin/
+/dist/
+*.o
+*.a
+*.s~
+
+# Sublation specific build artifacts
+*.subl
+*.subs.compiled
+/build/
+/target/
+
+# Temporary and cache files
+.cache/
+*.tmp
+*.temp
+*_temp
+*_tmp
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+/testdata/tmp/
+/testdata/output/
+coverage.out
+coverage.html
+*.cover
+*.profile
+
+# Documentation build artifacts
+/docs/build/
+/docs/_site/
+/docs/godoc/
+/site/
+
+# Performance profiling
+cpu.prof
+mem.prof
+trace.out
+*.pprof
+
+# Assembly listings
+*.lst
+
+# Benchmark results
+benchstat.txt
+benchmark_*.txt
+
+# Development and debug files
+debug
+debug.test
+*.debug
+core.*
+
+# OS specific
+.Trash-*
+.nfs*
+
+# Environment and config
+.env
+.env.local
+.env.*.local
+config.local.*
+
+# Sublation runtime files
+arena.dump
+runtime.state
+*.arena
+
+# Compiled models for testing (keep examples)
+/examples/*.subl
+!/examples/test_models/*.subl
+
+# CI/CD artifacts
+.github/workflows/cache/
+
+# Documentation site generation
+/pkgsite/

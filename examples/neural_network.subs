@@ -1,0 +1,35 @@
+# Multi-layer Neural Network Example
+# This demonstrates a complete feedforward network with multiple layers
+# and different activation functions
+
+# Input layer - 4 input neurons (float32 values)
+node 0 0x00 0 0 0x01
+payload 3f8000003f0000003f4000003f800000  # [1.0, 0.5, 0.75, 1.0]
+
+# First hidden layer - matrix multiplication + ReLU
+# Weight matrix 4x3 for input->hidden transformation
+node 1 0x02 0 64 0x02
+payload 000400030003 3f8000003f0000003f4000003f8000003f0000003f4000003f8000003f0000003f4000003f8000003f0000003f400000
+
+# ReLU activation for hidden layer
+node 2 0x03 64 64 0x04
+
+# Second hidden layer - 3x2 transformation
+node 3 0x02 64 96 0x08
+payload 000300020002 3f8000003f0000003f4000003f8000003f0000003f400000
+
+# Output layer - Sigmoid activation for binary classification
+node 4 0x04 96 104 0x10
+
+# Alternative: Softmax for multi-class classification
+# node 5 0x0A 96 104 0x20
+
+# Training example with gradient computation
+# (This would require gradient kernels to be implemented)
+# gradient_node 6 0x02 104 128 0x40
+
+# Batch processing example
+iterate batch 0 10 {
+    # Process batch of inputs through the network
+    node $batch 0x00 $batch*16 $batch*16 0x80
+}

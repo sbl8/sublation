@@ -1,0 +1,21 @@
+# Simple neural network layer example
+# Format: node <id> <kernel> <in_offset> <out_offset> [flags]
+
+# Input layer - 4 float32 values
+node 0 0x00 0 0 0x01
+payload 3f8000003f0000003f4000003f800000
+
+# Hidden layer - ReLU activation  
+node 1 0x03 0 16 0x02
+
+# Output layer - Sigmoid activation
+node 2 0x04 16 32 0x04
+
+# Batch processing example with iteration
+iterate i 10 15 {
+    node i 0x01 i i 0x00
+}
+
+# Matrix multiplication example
+# Layout: [rows(2)][cols(2)][b_cols(2)][matrix_a][matrix_b]
+payload 000200020002404000004040000040400000404000004040000040400000

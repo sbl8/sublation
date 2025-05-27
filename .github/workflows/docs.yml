@@ -1,0 +1,223 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Test and validate code quality
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22.2'
+        
+    - name: Verify dependencies
+      run: go mod verify
+      
+    - name: Run vet
+      run: go vet ./...
+      
+    - name: Run tests
+      run: go test -race -coverprofile=coverage.out ./...
+      
+    - name: Run benchmarks
+      run: go test -bench=. -benchmem ./kernels/ > benchmark.txt
+      
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.out
+        
+  # Generate and deploy documentation
+  docs:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22.2'
+        
+    - name: Install pkgsite
+      run: go install golang.org/x/pkgsite/cmd/pkgsite@latest
+      
+    - name: Create documentation directory
+      run: mkdir -p ./site
+      
+    - name: Generate Go documentation
+      run: |
+        # Generate package documentation using pkgsite
+        timeout 30s pkgsite -http=127.0.0.1:8080 -open=false . &
+        PKGSITE_PID=$!
+        sleep 5
+        
+        # Create documentation structure
+        mkdir -p ./site/pkg
+        
+        # Extract documentation for each package
+        for pkg in core kernels runtime compiler model; do
+          echo "Generating docs for $pkg..."
+          curl -s "http://127.0.0.1:8080/sublation/$pkg" > "./site/pkg/$pkg.html" || echo "Failed to get $pkg docs"
+        done
+        
+        # Get main package docs
+        curl -s "http://127.0.0.1:8080/sublation" > "./site/pkg/index.html" || echo "Failed to get main docs"
+        
+        # Stop pkgsite
+        kill $PKGSITE_PID || true
+        
+    - name: Generate static documentation site
+      run: |
+        cat > ./site/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Sublation - Documentation</title>
+            <style>
+                body { 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    max-width: 1200px; 
+                    margin: 0 auto; 
+                    padding: 20px;
+                    line-height: 1.6;
+                }
+                .header { 
+                    text-align: center; 
+                    padding: 40px 0; 
+                    border-bottom: 1px solid #eee;
+                    margin-bottom: 40px;
+                }
+                .nav { 
+                    display: grid; 
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                    gap: 20px;
+                    margin: 40px 0;
+                }
+                .nav-item { 
+                    padding: 20px; 
+                    border: 1px solid #ddd; 
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #333;
+                    transition: background-color 0.2s;
+                }
+                .nav-item:hover { 
+                    background-color: #f5f5f5; 
+                }
+                .footer { 
+                    text-align: center; 
+                    padding: 40px 0; 
+                    border-top: 1px solid #eee;
+                    margin-top: 40px;
+                    color: #666;
+                }
+                code { 
+                    background: #f4f4f4; 
+                    padding: 2px 4px; 
+                    border-radius: 3px; 
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Sublation Documentation</h1>
+                <p>Dialectical AI Engine - Pure Go Implementation</p>
+                <p><code>Compile‑time data‑flow, run‑time streaming</code></p>
+            </div>
+            
+            <div class="nav">
+                <a href="pkg/index.html" class="nav-item">
+                    <h3>📦 API Reference</h3>
+                    <p>Complete Go package documentation</p>
+                </a>
+                <a href="https://github.com/sbl8/sublation/blob/main/docs/architecture_overview.md" class="nav-item">
+                    <h3>🏗️ Architecture</h3>
+                    <p>System design and runtime overview</p>
+                </a>
+                <a href="https://github.com/sbl8/sublation/blob/main/docs/diagrams/sublate_units.md" class="nav-item">
+                    <h3>📑 Whitepaper</h3>
+                    <p>Theoretical foundations and design philosophy</p>
+                </a>
+                <a href="https://github.com/sbl8/sublation/tree/main/examples" class="nav-item">
+                    <h3>💡 Examples</h3>
+                    <p>Sample models and usage patterns</p>
+                </a>
+            </div>
+
+            <h2>Package Overview</h2>
+            <div class="nav">
+                <a href="pkg/core.html" class="nav-item">
+                    <h3>core</h3>
+                    <p>Sublate primitives, memory alignment, layout optimization</p>
+                </a>
+                <a href="pkg/kernels.html" class="nav-item">
+                    <h3>kernels</h3>
+                    <p>SIMD-optimized operations, assembly implementations</p>
+                </a>
+                <a href="pkg/runtime.html" class="nav-item">
+                    <h3>runtime</h3>
+                    <p>Execution engine, arena memory management</p>
+                </a>
+                <a href="pkg/compiler.html" class="nav-item">
+                    <h3>compiler</h3>
+                    <p>Model compilation, graph optimization</p>
+                </a>
+                <a href="pkg/model.html" class="nav-item">
+                    <h3>model</h3>
+                    <p>Graph representation, serialization</p>
+                </a>
+            </div>
+            
+            <div class="footer">
+                <p>Generated automatically from Go source code</p>
+                <p>Last updated: ${{ github.event.head_commit.timestamp }}</p>
+            </div>
+        </body>
+        </html>
+        EOF
+        
+    - name: Copy existing documentation
+      run: |
+        # Copy markdown documentation
+        cp -r docs/* ./site/ 2>/dev/null || true
+        
+        # Copy examples
+        mkdir -p ./site/examples
+        cp examples/*.subs ./site/examples/ 2>/dev/null || true
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: './site'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2

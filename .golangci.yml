@@ -1,0 +1,44 @@
+# Sublation golangci-lint configuration
+# Optimized for high-performance Go code with SIMD and unsafe operations
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+    - revive
+    - gocyclo
+    - funlen
+    - goconst
+    - misspell
+    - prealloc
+
+  disable:
+    - gosec # Allow unsafe operations in kernels
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+
+  funlen:
+    lines: 100
+    statements: 50
+
+  govet:
+    shadow: false
+
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true
+      - name: var-naming
+        disabled: true
